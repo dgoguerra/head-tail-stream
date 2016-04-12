@@ -2,9 +2,9 @@ var Transform = require('stream').Transform,
     util = require('util'),
     split = require('split');
 
-util.inherits(PeekStream, Transform);
+util.inherits(HeadStream, Transform);
 
-function PeekStream(opts) {
+function HeadStream(opts) {
     Transform.call(this);
     this.head = opts.head || 0;
     this.tail = opts.tail || 0;
@@ -24,7 +24,7 @@ function PeekStream(opts) {
     this.tailWindow = [];
 }
 
-PeekStream.prototype._transform = function(data, encoding, callback) {
+HeadStream.prototype._transform = function(data, encoding, callback) {
     this.lineNum++;
 
     // one of the first lines in the head range
@@ -62,7 +62,7 @@ PeekStream.prototype._transform = function(data, encoding, callback) {
     callback();
 };
 
-PeekStream.prototype._flush = function(callback) {
+HeadStream.prototype._flush = function(callback) {
     var _this = this;
     // flush the tail lines when the stream has ended
     this.tailWindow.forEach(function(data) {
@@ -92,5 +92,5 @@ module.exports = function(head, tail) {
 
     // run the data through split() first to ensure
     // the input received is splitted by lines
-    return split().pipe(new PeekStream(opts));
+    return split().pipe(new HeadStream(opts));
 };

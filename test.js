@@ -1,6 +1,6 @@
 var Readable = require('stream').Readable,
     tape = require('tape'),
-    peek = require('./index.js');
+    head = require('./index.js');
 
 function linesStream(n) {
     var stream = new Readable();
@@ -27,7 +27,7 @@ function getStreamLines(stream, callback) {
 }
 
 tape('basic usage', function(t) {
-    var s = linesStream(20).pipe(peek({ head: 3, tail: 2 }));
+    var s = linesStream(20).pipe(head({ head: 3, tail: 2 }));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -43,7 +43,7 @@ tape('basic usage', function(t) {
 });
 
 tape('multiline message', function(t) {
-    var s = linesStream(20).pipe(peek({
+    var s = linesStream(20).pipe(head({
         head: 3,
         tail: 2,
         message: [
@@ -67,7 +67,7 @@ tape('multiline message', function(t) {
 });
 
 tape('no message', function(t) {
-    var s = linesStream(20).pipe(peek({ head: 3, tail: 2, message: null }));
+    var s = linesStream(20).pipe(head({ head: 3, tail: 2, message: null }));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -82,7 +82,7 @@ tape('no message', function(t) {
 });
 
 tape('show only head', function(t) {
-    var s = linesStream(20).pipe(peek({ head: 3 }));
+    var s = linesStream(20).pipe(head({ head: 3 }));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -95,7 +95,7 @@ tape('show only head', function(t) {
 });
 
 tape('show only tail', function(t) {
-    var s = linesStream(20).pipe(peek({ tail: 3 }));
+    var s = linesStream(20).pipe(head({ tail: 3 }));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -108,7 +108,7 @@ tape('show only tail', function(t) {
 });
 
 tape('no output', function(t) {
-    var s = linesStream(20).pipe(peek({}));
+    var s = linesStream(20).pipe(head({}));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [])
@@ -117,7 +117,7 @@ tape('no output', function(t) {
 });
 
 tape('head is larger than output size', function(t) {
-    var s = linesStream(2).pipe(peek({ head: 5, tail: 2, message: '... output hidden ...\n' }));
+    var s = linesStream(2).pipe(head({ head: 5, tail: 2, message: '... output hidden ...\n' }));
 
     // when the head is larger than the stream output lines, no message or
     // tail is shown.
@@ -131,7 +131,7 @@ tape('head is larger than output size', function(t) {
 });
 
 tape('tail is larger than output size', function(t) {
-    var s = linesStream(5).pipe(peek({ head: 1, tail: 20, message: '... output hidden ...\n' }));
+    var s = linesStream(5).pipe(head({ head: 1, tail: 20, message: '... output hidden ...\n' }));
 
     // when the head is larger than the stream output lines, no message or
     // tail is shown.
@@ -149,7 +149,7 @@ tape('tail is larger than output size', function(t) {
 });
 
 tape('don\'t show message when head is 0', function(t) {
-    var s = linesStream(20).pipe(peek({ tail: 2, message: '... output hidden ...\n' }));
+    var s = linesStream(20).pipe(head({ tail: 2, message: '... output hidden ...\n' }));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -161,7 +161,7 @@ tape('don\'t show message when head is 0', function(t) {
 });
 
 tape('don\'t show message when tail is 0', function(t) {
-    var s = linesStream(20).pipe(peek({ head: 2, message: '... output hidden ...\n' }));
+    var s = linesStream(20).pipe(head({ head: 2, message: '... output hidden ...\n' }));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -173,7 +173,7 @@ tape('don\'t show message when tail is 0', function(t) {
 });
 
 tape('short syntax with head and tail', function(t) {
-    var s = linesStream(20).pipe(peek(3, 2));
+    var s = linesStream(20).pipe(head(3, 2));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -189,7 +189,7 @@ tape('short syntax with head and tail', function(t) {
 });
 
 tape('short syntax with head', function(t) {
-    var s = linesStream(20).pipe(peek(3));
+    var s = linesStream(20).pipe(head(3));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -202,7 +202,7 @@ tape('short syntax with head', function(t) {
 });
 
 tape('short syntax with tail as negative head', function(t) {
-    var s = linesStream(20).pipe(peek(-2));
+    var s = linesStream(20).pipe(head(-2));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
