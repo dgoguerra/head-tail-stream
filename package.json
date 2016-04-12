@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "node_modules/.bin/tape test.js"
+  },
+  "devDependencies": {
+    "tape": "^4.5.1"
+  }
+}

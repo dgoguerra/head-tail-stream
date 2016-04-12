@@ -1,0 +1,214 @@
+var Readable = require('stream').Readable,
+    tape = require('tape'),
+    peek = require('./index.js');
+
+function linesStream(n) {
+    var stream = new Readable();
+
+    for (var i = 0; i < n; i++) {
+        stream.push('line '+(i+1)+' of '+n+'\n');
+    }
+
+    stream.push(null);
+
+    return stream;
+}
+
+function getStreamLines(stream, callback) {
+    var lines = [];
+
+    stream.setEncoding('utf8')
+        .on('data', function(line) {
+            lines.push(line);
+        })
+        .on('finish', function() {
+            callback(lines);
+        });
+}
+
+tape('basic usage', function(t) {
+    var s = linesStream(20).pipe(peek({ head: 3, tail: 2 }));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 20\n',
+            'line 2 of 20\n',
+            'line 3 of 20\n',
+            '...\n',
+            'line 19 of 20\n',
+            'line 20 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('multiline message', function(t) {
+    var s = linesStream(20).pipe(peek({
+        head: 3,
+        tail: 2,
+        message: [
+            '## hiding long output...',
+            '## run with different options to see a detailed output'
+        ]
+    }));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 20\n',
+            'line 2 of 20\n',
+            'line 3 of 20\n',
+            '## hiding long output...',
+            '## run with different options to see a detailed output',
+            'line 19 of 20\n',
+            'line 20 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('no message', function(t) {
+    var s = linesStream(20).pipe(peek({ head: 3, tail: 2, message: null }));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 20\n',
+            'line 2 of 20\n',
+            'line 3 of 20\n',
+            'line 19 of 20\n',
+            'line 20 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('show only head', function(t) {
+    var s = linesStream(20).pipe(peek({ head: 3 }));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 20\n',
+            'line 2 of 20\n',
+            'line 3 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('show only tail', function(t) {
+    var s = linesStream(20).pipe(peek({ tail: 3 }));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 18 of 20\n',
+            'line 19 of 20\n',
+            'line 20 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('no output', function(t) {
+    var s = linesStream(20).pipe(peek({}));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [])
+        t.end();
+    });
+});
+
+tape('head is larger than output size', function(t) {
+    var s = linesStream(2).pipe(peek({ head: 5, tail: 2, message: '... output hidden ...\n' }));
+
+    // when the head is larger than the stream output lines, no message or
+    // tail is shown.
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 2\n',
+            'line 2 of 2\n'
+        ])
+        t.end();
+    });
+});
+
+tape('tail is larger than output size', function(t) {
+    var s = linesStream(5).pipe(peek({ head: 1, tail: 20, message: '... output hidden ...\n' }));
+
+    // when the head is larger than the stream output lines, no message or
+    // tail is shown.
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 5\n',
+            '... output hidden ...\n',
+            'line 2 of 5\n',
+            'line 3 of 5\n',
+            'line 4 of 5\n',
+            'line 5 of 5\n'
+        ])
+        t.end();
+    });
+});
+
+tape('don\'t show message when head is 0', function(t) {
+    var s = linesStream(20).pipe(peek({ tail: 2, message: '... output hidden ...\n' }));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 19 of 20\n',
+            'line 20 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('don\'t show message when tail is 0', function(t) {
+    var s = linesStream(20).pipe(peek({ head: 2, message: '... output hidden ...\n' }));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 20\n',
+            'line 2 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('short syntax with head and tail', function(t) {
+    var s = linesStream(20).pipe(peek(3, 2));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 20\n',
+            'line 2 of 20\n',
+            'line 3 of 20\n',
+            '...\n',
+            'line 19 of 20\n',
+            'line 20 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('short syntax with head', function(t) {
+    var s = linesStream(20).pipe(peek(3));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 20\n',
+            'line 2 of 20\n',
+            'line 3 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('short syntax with tail as negative head', function(t) {
+    var s = linesStream(20).pipe(peek(-2));
+
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 19 of 20\n',
+            'line 20 of 20\n'
+        ])
+        t.end();
+    });
+});
