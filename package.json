@@ -1,6 +1,6 @@
 {
   "name": "head-tail-stream",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Output the first or last lines of a stream",
   "author": "Diego Guerra <dgoguerra.or@gmail.com>",
   "license": "MIT",
