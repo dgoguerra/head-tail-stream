@@ -1,5 +1,6 @@
-var util = require('util'),
-    Transform = require('stream').Transform;
+var Transform = require('stream').Transform,
+    util = require('util'),
+    split = require('split');
 
 util.inherits(PeekStream, Transform);
 
@@ -89,5 +90,7 @@ module.exports = function(head, tail) {
         }
     }
 
-    return new PeekStream(opts);
+    // run the data through split() first to ensure
+    // the input received is splitted by lines
+    return split().pipe(new PeekStream(opts));
 };
