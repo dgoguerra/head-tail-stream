@@ -17,11 +17,11 @@ function linesStream(n) {
 function getStreamLines(stream, callback) {
     var lines = [];
 
-    stream.setEncoding('utf8')
+    stream
         .on('data', function(line) {
             lines.push(line);
         })
-        .on('finish', function() {
+        .on('end', function() {
             callback(lines);
         });
 }
@@ -57,8 +57,8 @@ tape('multiline message', function(t) {
             'line 1 of 20\n',
             'line 2 of 20\n',
             'line 3 of 20\n',
-            '## hiding long output...',
-            '## run with different options to see a detailed output',
+            '## hiding long output...\n',
+            '## run with different options to see a detailed output\n',
             'line 19 of 20\n',
             'line 20 of 20\n'
         ])
@@ -117,7 +117,7 @@ tape('no output', function(t) {
 });
 
 tape('head is larger than output size', function(t) {
-    var s = linesStream(2).pipe(head({ head: 5, tail: 2, message: '... output hidden ...\n' }));
+    var s = linesStream(2).pipe(head({ head: 5, tail: 2, message: '... output hidden ...' }));
 
     // when the head is larger than the stream output lines, no message or
     // tail is shown.
@@ -131,7 +131,7 @@ tape('head is larger than output size', function(t) {
 });
 
 tape('tail is larger than output size', function(t) {
-    var s = linesStream(5).pipe(head({ head: 1, tail: 20, message: '... output hidden ...\n' }));
+    var s = linesStream(5).pipe(head({ head: 1, tail: 20, message: '... output hidden ...' }));
 
     // when the head is larger than the stream output lines, no message or
     // tail is shown.
@@ -149,7 +149,7 @@ tape('tail is larger than output size', function(t) {
 });
 
 tape('don\'t show message when head is 0', function(t) {
-    var s = linesStream(20).pipe(head({ tail: 2, message: '... output hidden ...\n' }));
+    var s = linesStream(20).pipe(head({ tail: 2, message: '... output hidden ...' }));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
@@ -161,7 +161,7 @@ tape('don\'t show message when head is 0', function(t) {
 });
 
 tape('don\'t show message when tail is 0', function(t) {
-    var s = linesStream(20).pipe(head({ head: 2, message: '... output hidden ...\n' }));
+    var s = linesStream(20).pipe(head({ head: 2, message: '... output hidden ...' }));
 
     getStreamLines(s, function(lines) {
         t.deepEquals(lines, [
