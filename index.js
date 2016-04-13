@@ -1,14 +1,14 @@
 var Transform = require('stream').Transform,
     util = require('util'),
+    combine = require('stream-combiner'),
+    map = require('map-stream'),
     split = require('split');
-
-util.inherits(HeadStream, Transform);
 
 function HeadStream(opts) {
     Transform.call(this);
     this.head = opts.head || 0;
     this.tail = opts.tail || 0;
-    this.message = '...\n';
+    this.message = '...';
 
     if (opts.message || opts.message === null) {
         this.message = opts.message;
@@ -23,6 +23,8 @@ function HeadStream(opts) {
     this.lineNum = 0;
     this.tailWindow = [];
 }
+
+util.inherits(HeadStream, Transform);
 
 HeadStream.prototype._transform = function(data, encoding, callback) {
     this.lineNum++;
@@ -51,7 +53,7 @@ HeadStream.prototype._transform = function(data, encoding, callback) {
     }
 
     // keep the last lines that might be the tail to show when the stream ends
-    if (this.tail) {
+    if (data && data.toString() && this.tail) {
         if (this.tailWindow.length >= this.tail) {
             this.tailWindow.shift();
         }
@@ -64,10 +66,13 @@ HeadStream.prototype._transform = function(data, encoding, callback) {
 
 HeadStream.prototype._flush = function(callback) {
     var _this = this;
+
     // flush the tail lines when the stream has ended
     this.tailWindow.forEach(function(data) {
         _this.push(data);
     });
+
+    callback();
 };
 
 module.exports = function(head, tail) {
@@ -90,7 +95,13 @@ module.exports = function(head, tail) {
         }
     }
 
+    // stream to restore the newline character
+    var newLine = opts.newLine || '\n';
+    var mapNewline = map(function(line, callback) {
+        callback(null, line+newLine);
+    });
+
     // run the data through split() first to ensure
     // the input received is splitted by lines
-    return split().pipe(new HeadStream(opts));
+    return combine(split(), new HeadStream(opts), mapNewline);
 };
