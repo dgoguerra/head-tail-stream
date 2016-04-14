@@ -2,11 +2,15 @@ var Readable = require('stream').Readable,
     tape = require('tape'),
     head = require('./index.js');
 
-function linesStream(n) {
+function linesStream(n, lineEnd) {
     var stream = new Readable();
 
+    if (typeof lineEnd === 'undefined') {
+        lineEnd = '\n';
+    }
+
     for (var i = 0; i < n; i++) {
-        stream.push('line '+(i+1)+' of '+n+'\n');
+        stream.push('line '+(i+1)+' of '+n+lineEnd);
     }
 
     stream.push(null);
@@ -19,7 +23,7 @@ function getStreamLines(stream, callback) {
 
     stream
         .on('data', function(line) {
-            lines.push(line);
+            lines.push(line.toString());
         })
         .on('end', function() {
             callback(lines);
@@ -208,6 +212,23 @@ tape('short syntax with tail as negative head', function(t) {
         t.deepEquals(lines, [
             'line 19 of 20\n',
             'line 20 of 20\n'
+        ])
+        t.end();
+    });
+});
+
+tape('line stream input, without any newline characters', function(t) {
+    var s = linesStream(20, '').pipe(head({ head: 3, tail: 2, lineStream: true }));
+
+    // the output doesn't have any newlines, just as the input did
+    getStreamLines(s, function(lines) {
+        t.deepEquals(lines, [
+            'line 1 of 20',
+            'line 2 of 20',
+            'line 3 of 20',
+            '...',
+            'line 19 of 20',
+            'line 20 of 20'
         ])
         t.end();
     });

@@ -101,7 +101,13 @@ module.exports = function(head, tail) {
         callback(null, line+newLine);
     });
 
-    // run the data through split() first to ensure
-    // the input received is splitted by lines
-    return combine(split(), new HeadStream(opts), mapNewline);
+    // unless the option 'lineStream' is used to specify that the
+    // input stream is already a line-separated stream, run it
+    // through split() first to ensure the input received is
+    // splitted by lines
+    if (opts.lineStream) {
+        return new HeadStream(opts);
+    } else {
+        return combine(split(), new HeadStream(opts), mapNewline);
+    }
 };
